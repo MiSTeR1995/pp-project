@@ -355,7 +355,9 @@ window.addEventListener('DOMContentLoaded', () => {
             req.open('POST', 'server.php');
 
             // Заголовок для formData
-            req.setRequestHeader('Content-type', 'multipart/form-data');
+            // req.setRequestHeader('Content-type', 'multipart/form-data');
+            // для формата JSON
+            req.setRequestHeader('Content-type', 'application/json');
 
             // нам не всегда нужно передавать данные в формате json
             // formData - объект, с определенной формы быстро форм. все данные, которые заполнил пользователь
@@ -364,13 +366,31 @@ window.addEventListener('DOMContentLoaded', () => {
             // иначе formData просто не сможет найти value из этих инпутов
             const formData = new FormData(form);
 
-            req.send(formData); // т.к метод POST, то уже есть body (заполненная форма), который отправляется
+            // formData надо превратить в json, который просто так в другой формат не перегнать
+            const object = {};
+            formData.forEach(function (value, key) {
+                object[key] = value;
+            });
+
+            // теперь этот объект можно конвертнуть в json
+            const json = JSON.stringify(object);
+            // но сервер php не умеет нативно работать с форматом json
+            // чаще всего такие данные отправляются на сервера nodejs
+            // для этого надо в файле php декодировать из json
+            // $_POST = json_decode(file_get_contents("php://input"), true)
+            // req.send(formData); // т.к метод POST, то уже есть body (заполненная форма), который отправляется
+            req.send(json); // т.к метод POST, то уже есть body (заполненная форма), который отправляется
 
             req.addEventListener('load', () => {
                 if (req.status === 200) {
                     console.log(req.response);
                     // оповестим пользователя о загрузке
                     statusMessage.textContent = message.success;
+                    form.reset();
+                    // удаление блока через 2 секунды
+                    setTimeout(() => {
+                        statusMessage.remove();
+                    }, 2000);
 
                 } else {
                     statusMessage.textContent = message.failure;
