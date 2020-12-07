@@ -325,6 +325,58 @@ window.addEventListener('DOMContentLoaded', () => {
         '.menu .container',
         'menu__item'
     ).render();
-
     // после рендера их на страницу - нужно удалить эти карточки в html
+
+    // Отправка форм
+    const forms = document.querySelectorAll('form');
+
+    const message = {
+        loading: 'Загрузка',
+        success: 'Спасибо! Скоро с вами свяжемся',
+        failure: 'Что-то пошло не так...'
+    };
+
+    // подвяжем функцию к формам
+    forms.forEach(item => {
+        postData(item);
+    });
+
+    function postData(form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Сообщение пользователю при загрузке формы
+            const statusMessage = document.createElement('div');
+            statusMessage.classList.add('status');
+            statusMessage.textContent = message.loading;
+            form.append(statusMessage);
+
+            const req = new XMLHttpRequest();
+            req.open('POST', 'server.php');
+
+            // Заголовок для formData
+            req.setRequestHeader('Content-type', 'multipart/form-data');
+
+            // нам не всегда нужно передавать данные в формате json
+            // formData - объект, с определенной формы быстро форм. все данные, которые заполнил пользователь
+            // очень важный момент:
+            // в инпутоподобных элементах всегда нужно указывать аттрибут name в верстке
+            // иначе formData просто не сможет найти value из этих инпутов
+            const formData = new FormData(form);
+
+            req.send(formData); // т.к метод POST, то уже есть body (заполненная форма), который отправляется
+
+            req.addEventListener('load', () => {
+                if (req.status === 200) {
+                    console.log(req.response);
+                    // оповестим пользователя о загрузке
+                    statusMessage.textContent = message.success;
+
+                } else {
+                    statusMessage.textContent = message.failure;
+                }
+            });
+        });
+    }
+
 });
