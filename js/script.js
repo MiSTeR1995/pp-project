@@ -138,6 +138,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Создание модального окна
     const modalWin = document.querySelector('.modal');
     const modalTrigger = document.querySelectorAll('[data-modal]');
+
     const modalClose = document.querySelector('[data-close]');
 
     // разбил на две функции открытия и закрытия
@@ -169,11 +170,14 @@ window.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', openModal);
     });
 
-    modalClose.addEventListener('click', closeModal);
+    // modalClose.addEventListener('click', closeModal);
 
     // делаем закрытие модального окна, если пользователь нажимает на подложку
-    modalWin.addEventListener('click', event => {
-        if (event.target === modalWin) {
+    modalWin.addEventListener('click', e => {
+        // нажатие на крестик в модалке - перенесено сюда(аттрибут data-close)
+        // странно, при клике на крестик(у него есть аттрибут data-close) получаем пустую строку, поэтому задаем условие относительно нее
+        // крестик также будет работать в динамически созданных элементах
+        if (e.target === modalWin || e.target.getAttribute('data-close') == '') {
             closeModal();
         }
     });
@@ -186,7 +190,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // вызываем модальное окно через определенное время
-    const modalTimerId = setTimeout(openModal, 3000);
+    const modalTimerId = setTimeout(openModal, 50000);
 
     function showModalByScroll() {
 
@@ -331,8 +335,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('form');
 
     const message = {
-        loading: 'Загрузка',
-        success: 'Спасибо! Скоро с вами свяжемся',
+        loading: 'img/form/spinner.svg',
+        success: 'Спасибо! Мы скоро с Вами свяжемся!',
         failure: 'Что-то пошло не так...'
     };
 
@@ -345,11 +349,18 @@ window.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            // Сообщение пользователю при загрузке формы
-            const statusMessage = document.createElement('div');
-            statusMessage.classList.add('status');
-            statusMessage.textContent = message.loading;
-            form.append(statusMessage);
+            // создадим элемент для спиннера загрузки
+            const loadingStatus = document.createElement('img');
+            loadingStatus.src = message.loading;
+            loadingStatus.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `;
+
+            // form.append(loadingStatus);
+            // вставляем спиннер непосредственно после формы, а не в нее
+            // чтобы горизонтальные формы не съезжали
+            form.insertAdjacentElement('afterend', loadingStatus);
 
             const req = new XMLHttpRequest();
             req.open('POST', 'server.php');
@@ -383,20 +394,57 @@ window.addEventListener('DOMContentLoaded', () => {
 
             req.addEventListener('load', () => {
                 if (req.status === 200) {
+
                     console.log(req.response);
-                    // оповестим пользователя о загрузке
-                    statusMessage.textContent = message.success;
+
+                    // оповестим пользователя о загрузке, созданным блоком
+                    showThanksModal(message.success);
+
                     form.reset();
                     // удаление блока через 2 секунды
-                    setTimeout(() => {
-                        statusMessage.remove();
-                    }, 2000);
+                    // setTimeout(() => {
+                    //     statusMessage.remove();
+                    // }, 2000);
+
+                    // убираем таймаут, потому что statusMes будет использоваться
+                    // только для загрузки ( спинер на странице)
+                    loadingStatus.remove();
 
                 } else {
-                    statusMessage.textContent = message.failure;
+                    showThanksModal(message.failure);
                 }
             });
         });
     }
 
+    // создание красивого оповещение пользователя
+    // Пометка: обработчики событий на динамически созданные элементы просто так
+    // не вешаются, для этого нужно использовать делегирование событий
+    function showThanksModal(message) {
+        const prevModalDialog = document.querySelector('.modal__dialog');
+
+        prevModalDialog.classList.add('hide');
+        openModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__close" data-close>&times;</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+        // теперь нужно добавить этот элемент в модальное окно
+        document.querySelector('.modal').append(thanksModal);
+
+        // через определенное время форма должна вернуться обратно
+        // вдруг пользователь захочет опять открыть ее, а мы ее скрыли
+        // возвращаем через асинхронную операцию с сет таймаутом
+        setTimeout(() => {
+            thanksModal.remove();
+            prevModalDialog.classList.add('show');
+            prevModalDialog.classList.remove('hide');
+            closeModal();
+        }, 4000);
+    }
 });
