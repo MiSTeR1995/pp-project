@@ -342,10 +342,77 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // подвяжем функцию к формам
     forms.forEach(item => {
-        postData(item);
+        postDataByFetch(item);
     });
 
-    function postData(form) {
+    function postDataByFetch(form) {
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // создадим элемент для спиннера загрузки
+            const loadingStatus = document.createElement('img');
+            loadingStatus.src = message.loading;
+            loadingStatus.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `;
+            form.insertAdjacentElement('afterend', loadingStatus);
+
+            // сбор данных с формы
+            const formData = new FormData(form);
+
+            // трансформируем formData в объект
+            const object = {};
+            formData.forEach(function (value, key) {
+                object[key] = value;
+            });
+
+            // теперь этот объект можно конвертнуть в json
+            // подставится далее напрямую в body
+            // const json = JSON.stringify(object);
+
+            // создание запроса с помощью fetch (POST)
+            fetch('server.php', {
+                method: 'POST',
+                // для json нужно использовать заголовки
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify(object)
+            })
+            // получение внятного ответа от сервера. Превратим ответ в  текст
+            .then( data => data.text())
+            // раньше мы  смотрели когда сработает событие load, когда событие полностью завершится, отслеживали статусы и выполняли определенные действия
+            // сейчас будемд елать тоже самое, только при помощи промисов
+            .then(data => {
+                // нужно выполнить операци которые были в положительном исходе запроса
+                console.log(data);
+                showThanksModal(message.success);
+                loadingStatus.remove(); // удаляем спиннер
+            })
+            .catch(() => {
+                // операции для отрицательного исхода запроса
+                // промис не перейдет в состояние reject из-за ответа HTTP который считается ошибкой (404, 500,501...)
+                // он все равно выполнится нормально. Единственное что у него поменяется
+                // это свойство status, оно  перейдет в состояние false.
+                // Именно поэтому при неверном урл мы получаем нормальный результат
+                // Данные не отправились, но при этом и промис нормально отработал
+                // Мы увидели модальное окно и вроде бы все прошло нормально
+                // Самое главное для fetch это то что он вообще смог сделать
+                // этот запрос. Reject будет возникать только при сбое сети и
+                // если что-то там помешало запросу выполнится.
+                // У этого механизма есть свои плюсы.
+                showThanksModal(message.failure);
+            })
+            .finally(() => {
+                // выполняем это всегда, вне зависимости от исхода
+                form.reset(); // очистка формы
+            });
+        });
+    }
+
+    function postDataByXMLHTTPRequest(form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 

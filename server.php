@@ -1,3 +1,4 @@
 <?php
-$_POST = json_decode(file_get_contents("php://input"), true); // для возможности работы с json
+// нужно для работы с форматом json
+$_POST = json_decode(file_get_contents("php://input"), true);
 echo var_dump($_POST);
