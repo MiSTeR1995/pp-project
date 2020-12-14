@@ -514,4 +514,10 @@ window.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }, 4000);
     }
+
+    // Получаем доступ к базе данных с помощью json-server
+
+    fetch('http://localhost:3000/menu')
+        .then(data => data.json()) // превратим json  в объект
+        .then(res => console.log(res));
 });
