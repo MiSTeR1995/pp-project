@@ -222,6 +222,7 @@ window.addEventListener('DOMContentLoaded', () => {
             this.imgAlt = imgAlt;
 
             this.classes = classes; // не стоит забывать что это массив
+
             // такой вариант не сработает, потому что у нас
             // 1) лежит пустой массив, а он не является логическим false
             // 2) мы этот массив превращаем в строку и дальше перебрать его не сможем
@@ -240,6 +241,7 @@ window.addEventListener('DOMContentLoaded', () => {
         render() {
             // создаем элемент и помещаем в него верстку
             const element = document.createElement('div');
+
             // назначим сами в rest параметр по умолчанию
             // на случай, если пользователь забыл передать главный класс в элемент
             // если в rest ничего не передали, то будет все равно сформирован пустой массив
@@ -299,39 +301,81 @@ window.addEventListener('DOMContentLoaded', () => {
 
         }
     }
+    const getResource = async (url) => {
 
+        const result = await fetch(url);
+
+        // т.к. фетч не реагирует на ошибки 404 500 и тд, то такое поведение
+        // нужно сделать самим
+
+        // два свойства у промимса, которые есть у промиса, вернувшегося с фетч
+        // .ok - что-то получили, все окей
+        // .status  - попадаем на тот статус, который вернулся от сервера
+
+        // если пошло что-то не так, то выкидываем ошибку
+        // есл выкидывается ошибка в ручном режиме, то срабатывает catch
+        if (!result.ok) {
+            // объект ошибки. throw - выкидывает ошибку в консоль
+            throw new Error(`Could not fetch ${url}, status: ${result.status}`);
+        }
+        return await result.json();
+    };
+
+    // избавляемся от лишних кусков кода и создаем карточки с помощью функции и базы данных
+    // getResource('http://localhost:3000/menu')
+    //     // придет обычный объект, не json и можем сразу его использовать
+    //     // а там лежит обычный массив из объектов (см. базу данных)
+    //     .then(data => {
+    //         // также желательно использовать синтаксис деструктуризации объекта
+    //         // когда из объекта вытаскиваются отделньые свойства в качестве отдельной переменной
+    //         data.forEach(({title, descr, price, img, altimg}) => {
+    //             // конструктор наших карточек. Он будет создаваться столько раз
+    //             // сколько будет объектов в этом массиве, который приешл с сервера
+    //             // в конструктор передадим свойства объекта
+
+    //             new MenuCard(title, descr, price, img, altimg,'.menu .container')
+    //             .render();
+    //         });
+    //     });
+
+    // 2 вариант. Без использования классов. Формирование верстки налету
+    // в некоторых случаях шаблон классов не нужен (созд. один раз на странице)
+    getResource('http://localhost:3000/menu')
+        .then(data => createCard(data));
+
+    function createCard(data) {
+        // будем получать массив из базы данных и также перебираем его с деструктуризацией
+        data.forEach(({ title, descr, price, img, altimg }) => {
+            const element = document.createElement('div');
+
+            element.classList.add('menu__item');
+
+            // форммируем верстку налету со свойствми от сервера
+            element.innerHTML = `
+                <img src=${img} alt=${altimg}>
+                <h3 class="menu__item-subtitle">${title}</h3>
+                <div class="menu__item-descr">${descr}</div>
+                <div class="menu__item-divider"></div>
+                <div class="menu__item-price">
+                    <div class="menu__item-cost">Цена:</div>
+                    <div class="menu__item-total"><span>${price}</span> руб/день</div>
+                </div>
+            `;
+            document.querySelector('.menu .container').append(element);
+        });
+    }
     // Объект без переменной создается и удаляется, нужен чтобы использовать объект на месте
-    new MenuCard(
-        'Меню "Фитнес"',
-        'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-        9,
-        'img/tabs/vegy.jpg',
-        'vegy',
-        '.menu .container'
-    ).render();
+    // UPD: старый варинт (удалил еще 2 карты), выше делаем это все через функцию и получение данных от сервера
+    // new MenuCard(
+    //     'Меню "Фитнес"',
+    //     'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
+    //     9,
+    //     'img/tabs/vegy.jpg',
+    //     'vegy',
+    //     '.menu .container'
+    // ).render();
 
-    new MenuCard(
-        'Меню “Премиум”',
-        'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-        21,
-        'img/tabs/elite.jpg',
-        'elite',
-        '.menu .container',
-        'menu__item'
-    ).render();
-
-    new MenuCard(
-        'Меню "Постное"',
-        'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-        14,
-        'img/tabs/post.jpg',
-        'post',
-        '.menu .container',
-        'menu__item'
-    ).render();
-    // после рендера их на страницу - нужно удалить эти карточки в html
-
-    // Отправка форм
+        // Отправка форм
     const forms = document.querySelectorAll('form');
 
     const message = {
@@ -342,10 +386,43 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // подвяжем функцию к формам
     forms.forEach(item => {
-        postDataByFetch(item);
+        bindPostData(item);
     });
 
-    function postDataByFetch(form) {
+    // сделаем взаимодействие с сервером отдельной функцией
+    // функция занимается тем, что настраивает запрос.
+    // она фетчит(посылает запрос на сервер), получает какой-то ответ от сервера
+    // после этого трансформирует этот ответ в json
+    // внутри этой функции асинхронный код и это нужно учесть
+    // т.к. код пойдет выполняться дальше, не ожидая ответа от сервера (где фетч)
+    // из-за этого функция может вернуть ошибку, а не нужный нам результат
+    // для этого нужно указать, что функция имеет асинхронный код.
+    // async поможет это сделать (ES8)
+    // после этого уже можно использовать его парный оператор await (всегда вместе)
+    // он ставится перед теми операцими, которые нам необходимо дождаться
+    const postData = async (url, data) => {
+        // внутри переменной лежит промис, который возвращает фетч
+        // нам нужно дождаться выполнение фетча, поэтому ставим await
+        // неважно какой результат, но выполнения мы должны дождаться
+        // код не совсем синхронный, он не блокирует выполение кода дальше
+        // но именно для этого будет ждать до 30 сек(по стандарту) ответа
+        const result = await fetch(url, {
+            method: 'POST',
+            // для json нужно использовать заголовки
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: data
+        });
+
+        // вернем результат в формате json
+        // здесь тоже понадобится await, т.к. возващается промис
+        // эта операция возникает и проводится не сразу, мы не знаем
+        // какой там большой объект json и сколько нужно времени на обработку
+        return await result.json();
+    };
+
+    function bindPostData(form) {
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -361,28 +438,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
             // сбор данных с формы
             const formData = new FormData(form);
-
             // трансформируем formData в объект
-            const object = {};
-            formData.forEach(function (value, key) {
-                object[key] = value;
-            });
+            // const object = {};
+            // formData.forEach(function (value, key) {
+            //     object[key] = value;
+            // });
+
+            // Object.fromEntries преобразует из массива с массивами объект.
+            // formData  сначала превращается в массив массвов
+            // потом превращаем ее в классический объект, а потом в json
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
             // теперь этот объект можно конвертнуть в json
             // подставится далее напрямую в body
             // const json = JSON.stringify(object);
 
             // создание запроса с помощью fetch (POST)
-            fetch('server.php', {
-                method: 'POST',
-                // для json нужно использовать заголовки
-                headers: {
-                    'Content-type': 'application/json'
-                },
-                body: JSON.stringify(object)
-            })
+            // fetch('server.php', {
+            //     method: 'POST',
+            //     // для json нужно использовать заголовки
+            //     headers: {
+            //         'Content-type': 'application/json'
+            //     },
+            //     body: JSON.stringify(object)
+            // })
+            postData('http://localhost:3000/requests', json)
             // получение внятного ответа от сервера. Превратим ответ в  текст
-            .then( data => data.text())
+            // .then( data => data.text()) // уже не нужна, т.к происходит в postData
             // раньше мы  смотрели когда сработает событие load, когда событие полностью завершится, отслеживали статусы и выполняли определенные действия
             // сейчас будемд елать тоже самое, только при помощи промисов
             .then(data => {
@@ -517,7 +599,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Получаем доступ к базе данных с помощью json-server
 
-    fetch('http://localhost:3000/menu')
-        .then(data => data.json()) // превратим json  в объект
-        .then(res => console.log(res));
+    // fetch('http://localhost:3000/menu')
+    //     .then(data => data.json()) // превратим json  в объект
+    //     .then(res => console.log(res));
 });
