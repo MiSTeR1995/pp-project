@@ -616,9 +616,107 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 4000);
     }
 
-    // Получаем доступ к базе данных с помощью json-server
+    // получить все элементы
+    // параметр текущий слайд, по клику на стрелку меняется
+    // функция для показа слайдов
+    // 2 функции показ и скрытие других
+    // принимает индекс, показывает определенный слайд, остальные скрыть
+    // проверять что-то условиями ( конец и начало)
+    // навесить обработчики на стрелки и изменяет индексы
 
-    // fetch('http://localhost:3000/menu')
-    //     .then(data => data.json()) // превратим json  в объект
-    //     .then(res => console.log(res));
+
+    // Slider V.1 Простой вариант
+    const slides = document.querySelectorAll('.offer__slide');
+    const prevSlide = document.querySelector('.offer__slider-prev');
+    const nextSlide = document.querySelector('.offer__slider-next');
+    const totalSlide = document.querySelector('#total');
+    const currentSlide = document.querySelector('#current');
+    let slideIndex = 1;
+
+    showSlides(slideIndex);
+
+    // После инициализации слайдера, нужно показать общее количество и текущий
+    if(slides.length < 10) {
+        totalSlide.textContent = `0${slides.length}`;
+    } else {
+        totalSlide.textContent = slides.length;
+    }
+    function showSlides(n) {
+
+        // проверка граничных значений
+        // если больше последнего, то перелистываем в начало
+        if (n > slides.length) {
+            slideIndex = 1;
+        }
+        // если меньше первого то в конец
+        if (n < 1) {
+            slideIndex = slides.length;
+        }
+
+        // скроем все слайды
+        slides.forEach(item => {
+            item.classList.add('hide');
+            item.classList.remove('show');
+        });
+
+        // нужно показать текущий
+        slides[slideIndex - 1].classList.remove('hide');
+        slides[slideIndex - 1].classList.add('show');
+
+        // теперь нужно поработать с номером текущего слайда
+        if (slides.length < 10) {
+            currentSlide.textContent = `0${slideIndex}`;
+        } else {
+            currentSlide.textContent = slideIndex;
+        }
+    }
+
+    function plusSlides(n) {
+        // прибавляем слайд и сразу же показываем нужный слайд
+        showSlides(slideIndex += n);
+    }
+
+    prevSlide.addEventListener('click', () => {
+        plusSlides(-1);
+    });
+    nextSlide.addEventListener('click', () => {
+        plusSlides(1);
+    });
+
+
+    // const sliderWripper = document.querySelector('.offer__slider-wrapper');
+    // const sliderCounter = document.querySelector('.offer__slider-counter');
+
+
+    // получим слайды из базы данных
+    // const getSlide = async url => {
+
+    //     const result = await axios.get(url);
+
+    //     return await result;
+    // };
+
+    // getSlide('http://localhost:3000/slider')
+    //     .then(slides => slides.data.forEach(({ img, alt }, i) => {
+    //         const element = document.createElement('div');
+    //         element.classList.add('offer__slide', 'hide');
+
+    //         if (i === currentSlide) {
+    //             element.classList.remove('hide');
+    //             element.classList.add('show');
+    //         }
+
+    //         element.innerHTML = `
+    //                 <img src=${img} alt=${alt}>
+    //             `;
+
+    //         sliderWripper.append(element);
+    //         totalSlide++;
+    //         console.log(totalSlide);
+    //     }));
+    // console.log(totalSlide);
+
+
+
+
 });
