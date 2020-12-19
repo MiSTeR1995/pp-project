@@ -626,62 +626,158 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
     // Slider V.1 Простой вариант
+
     const slides = document.querySelectorAll('.offer__slide');
     const prevSlide = document.querySelector('.offer__slider-prev');
     const nextSlide = document.querySelector('.offer__slider-next');
     const totalSlide = document.querySelector('#total');
     const currentSlide = document.querySelector('#current');
+
+    // переменные для карусели
+    const slidesWrapper = document.querySelector('.offer__slider-wrapper');
+    const slidesField = document.querySelector('.offer__slider-inner');
+    const slideW = window.getComputedStyle(slidesWrapper).width; // ширина отрендеренного блока
+    let offset = 0; // отступ для слайдеров
+
     let slideIndex = 1;
 
-    showSlides(slideIndex);
+    // showSlides(slideIndex);
 
     // После инициализации слайдера, нужно показать общее количество и текущий
+    // работает для обоих вариантов, оставляем его
     if(slides.length < 10) {
         totalSlide.textContent = `0${slides.length}`;
+        currentSlide.textContent = `0${slideIndex}`;
+
     } else {
         totalSlide.textContent = slides.length;
+        currentSlide.textContent = slideIndex;
+
     }
-    function showSlides(n) {
+    // function showSlides(n) {
 
-        // проверка граничных значений
-        // если больше последнего, то перелистываем в начало
-        if (n > slides.length) {
+    //     // проверка граничных значений
+    //     // если больше последнего, то перелистываем в начало
+    //     if (n > slides.length) {
+    //         slideIndex = 1;
+    //     }
+    //     // если меньше первого то в конец
+    //     if (n < 1) {
+    //         slideIndex = slides.length;
+    //     }
+
+    //     // скроем все слайды
+    //     slides.forEach(item => {
+    //         item.classList.add('hide');
+    //         item.classList.remove('show');
+    //     });
+
+    //     // нужно показать текущий
+    //     slides[slideIndex - 1].classList.remove('hide');
+    //     slides[slideIndex - 1].classList.add('show');
+
+    //     // теперь нужно поработать с номером текущего слайда
+    //     if (slides.length < 10) {
+    //         currentSlide.textContent = `0${slideIndex}`;
+    //     } else {
+    //         currentSlide.textContent = slideIndex;
+    //     }
+    // }
+
+    // function plusSlides(n) {
+    //     // прибавляем слайд и сразу же показываем нужный слайд
+    //     showSlides(slideIndex += n);
+    // }
+
+    // prevSlide.addEventListener('click', () => {
+    //     plusSlides(-1);
+    // });
+    // nextSlide.addEventListener('click', () => {
+    //     plusSlides(1);
+    // });
+
+
+
+
+
+    // Slider v2. Карусель
+
+    // для иннера, которое занимает большое количество пространства в одну строчку
+    // внтутри себя оно выстраивает слайды
+    // нужно установить ширину этому блоку (ширина= все слайды * 100%)
+    // делается для того, чтобы поместить все слайды во внутрь этого блока
+    slidesField.style.width = 100 * slides.length + `%`;
+
+    // выстроим слайды не вертикально ,  а горизонтально в полоску
+    // конечно это все можно прописать и в css, так даже будет лучше
+    slidesField.style.display = 'flex';
+    slidesField.style.transition = '0.5s all';
+
+    // нужно лишние элементы скрыть
+    slidesWrapper.style.overflow = 'hidden';
+
+    slides.forEach(slide => {
+        // всем слайдам нужно установить одну ширину
+        slide.style.width = slideW;
+    });
+
+    nextSlide.addEventListener('click', () => {
+        // двигаемся вправо, нужно предусмотреть границы
+        // но слайды мы перемещаем в начало
+        // если это последний слайд
+        if (offset == +slideW.slice(0, slideW.length - 2) * (slides.length - 1)) { // но нужно для начала данные из sladeW вытащить число
+            offset = 0;
+        } else {
+            offset += +slideW.slice(0, slideW.length - 2);
+        }
+
+        // будем сдвигать изображения с помощью трансформа
+        // двигаем влево, поэтому нужно использовать отрицательное значение
+        slidesField.style.transform = `translateX(-${offset}px)`;
+
+        // контролируем текущую нумерацию
+        if (slideIndex == slides.length) {
             slideIndex = 1;
-        }
-        // если меньше первого то в конец
-        if (n < 1) {
-            slideIndex = slides.length;
+        } else {
+            slideIndex++;
         }
 
-        // скроем все слайды
-        slides.forEach(item => {
-            item.classList.add('hide');
-            item.classList.remove('show');
-        });
-
-        // нужно показать текущий
-        slides[slideIndex - 1].classList.remove('hide');
-        slides[slideIndex - 1].classList.add('show');
-
-        // теперь нужно поработать с номером текущего слайда
         if (slides.length < 10) {
             currentSlide.textContent = `0${slideIndex}`;
         } else {
             currentSlide.textContent = slideIndex;
         }
-    }
-
-    function plusSlides(n) {
-        // прибавляем слайд и сразу же показываем нужный слайд
-        showSlides(slideIndex += n);
-    }
+    });
 
     prevSlide.addEventListener('click', () => {
-        plusSlides(-1);
+        // двигаемся назд, нужно предусмотреть границы
+        // но слайды мы перемещаем уже в конец
+        // если это первый слайд
+        if (offset == 0) {
+            offset = +slideW.slice(0, slideW.length - 2) * (slides.length - 1);
+        } else {
+            offset -= +slideW.slice(0, slideW.length - 2);
+        }
+
+        // будем сдвигать изображения с помощью трансформа
+        // двигаем влево, поэтому нужно использовать отрицательное значение
+        slidesField.style.transform = `translateX(-${offset}px)`;
+
+        // контролируем текущую нумерацию
+        if (slideIndex == 1) {
+            slideIndex = slides.length;
+        } else {
+            slideIndex--;
+        }
+
+        if (slides.length < 10) {
+            currentSlide.textContent = `0${slideIndex}`;
+        } else {
+            currentSlide.textContent = slideIndex;
+        }
+
     });
-    nextSlide.addEventListener('click', () => {
-        plusSlides(1);
-    });
+
 
 
     // const sliderWripper = document.querySelector('.offer__slider-wrapper');
