@@ -338,32 +338,51 @@ window.addEventListener('DOMContentLoaded', () => {
     //         });
     //     });
 
+
+    // Вариант с использовнием axios.
+
+    axios.get('http://localhost:3000/menu')
+        .then(data => {
+            // обратиться нужно к свойству data у полученного объекта (в нашем случае тофтология - data у объекта data)
+            data.data.forEach(({ title, descr, price, img, altimg }) => {
+                new MenuCard(title, descr, price, img, altimg,'.menu .container')
+                .render();
+            });
+        });
+
+
+
+
     // 2 вариант. Без использования классов. Формирование верстки налету
     // в некоторых случаях шаблон классов не нужен (созд. один раз на странице)
-    getResource('http://localhost:3000/menu')
-        .then(data => createCard(data));
+    // getResource('http://localhost:3000/menu')
+    //     .then(data => createCard(data));
 
-    function createCard(data) {
-        // будем получать массив из базы данных и также перебираем его с деструктуризацией
-        data.forEach(({ title, descr, price, img, altimg }) => {
-            const element = document.createElement('div');
+    // function createCard(data) {
+    //     // будем получать массив из базы данных и также перебираем его с деструктуризацией
+    //     data.forEach(({ title, descr, price, img, altimg }) => {
+    //         const element = document.createElement('div');
 
-            element.classList.add('menu__item');
+    //         element.classList.add('menu__item');
 
-            // форммируем верстку налету со свойствми от сервера
-            element.innerHTML = `
-                <img src=${img} alt=${altimg}>
-                <h3 class="menu__item-subtitle">${title}</h3>
-                <div class="menu__item-descr">${descr}</div>
-                <div class="menu__item-divider"></div>
-                <div class="menu__item-price">
-                    <div class="menu__item-cost">Цена:</div>
-                    <div class="menu__item-total"><span>${price}</span> руб/день</div>
-                </div>
-            `;
-            document.querySelector('.menu .container').append(element);
-        });
-    }
+    //         // форммируем верстку налету со свойствми от сервера
+    //         element.innerHTML = `
+    //             <img src=${img} alt=${altimg}>
+    //             <h3 class="menu__item-subtitle">${title}</h3>
+    //             <div class="menu__item-descr">${descr}</div>
+    //             <div class="menu__item-divider"></div>
+    //             <div class="menu__item-price">
+    //                 <div class="menu__item-cost">Цена:</div>
+    //                 <div class="menu__item-total"><span>${price}</span> руб/день</div>
+    //             </div>
+    //         `;
+    //         document.querySelector('.menu .container').append(element);
+    //     });
+    // }
+
+
+
+
     // Объект без переменной создается и удаляется, нужен чтобы использовать объект на месте
     // UPD: старый варинт (удалил еще 2 карты), выше делаем это все через функцию и получение данных от сервера
     // new MenuCard(
