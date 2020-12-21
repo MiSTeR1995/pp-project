@@ -616,16 +616,12 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 4000);
     }
 
-    // получить все элементы
-    // параметр текущий слайд, по клику на стрелку меняется
-    // функция для показа слайдов
-    // 2 функции показ и скрытие других
-    // принимает индекс, показывает определенный слайд, остальные скрыть
-    // проверять что-то условиями ( конец и начало)
-    // навесить обработчики на стрелки и изменяет индексы
 
 
-    // Slider V.1 Простой вариант
+
+
+
+    // Создание слайдера
 
     const slides = document.querySelectorAll('.offer__slide');
     const prevSlide = document.querySelector('.offer__slider-prev');
@@ -637,23 +633,70 @@ window.addEventListener('DOMContentLoaded', () => {
     const slidesWrapper = document.querySelector('.offer__slider-wrapper');
     const slidesField = document.querySelector('.offer__slider-inner');
     const slideW = window.getComputedStyle(slidesWrapper).width; // ширина отрендеренного блока
-    let offset = 0; // отступ для слайдеров
 
+    // навигация по слайдам
+    const slider = document.querySelector('.offer__slider');
+    const dots = []; // истинный массив для точек, чтобы работать потом с ними
+
+    let offset = 0; // отступ для слайдеров
     let slideIndex = 1;
+
+    // функции
+    const setCurrentSlide = ind => {
+
+        // После инициализации слайдера, нужно показать общее количество и текущий
+        // работает для обоих вариантов, оставляем его
+        if (slides.length < 10) {
+            totalSlide.textContent = `0${slides.length}`;
+            currentSlide.textContent = `0${ind}`;
+
+        } else {
+            totalSlide.textContent = slides.length;
+            currentSlide.textContent = ind;
+
+        }
+    };
+    const dotsProc = dotsArray => {
+
+        // также будем обрабатывать точки слайдеров
+        dotsArray.forEach(dot => dot.style.opacity = '.5');
+        dotsArray[slideIndex - 1].style.opacity = 1; // -1 потому что слайд индекс начинался с 1
+    };
+
+    // точки для слайдера
+    slider.style.position = 'relative';
+
+    // сначала создаем обертку для точек
+    const indicators = document.createElement('ol');
+    indicators.classList.add('carousel-indicators');
+    // можно добавить стили через cssText, но лучше напрямую в css
+    // indicators.style.cssText
+    slider.append(indicators);
+
+    for (let i = 0; i < slides.length; i++) {
+
+        const dot = document.createElement('li');
+
+        dot.setAttribute('data-slide-to', i + 1); // аттрибуты для каждой точки, начиная с 1
+        dot.classList.add('dot');
+
+
+        // сделаем первую точку активной изначально
+        if (i == 0) {
+            dot.style.opacity = 1;
+        }
+
+        indicators.append(dot);
+        dots.push(dot);
+    }
+
+
+    // Slider V.1 Простой вариант
 
     // showSlides(slideIndex);
 
-    // После инициализации слайдера, нужно показать общее количество и текущий
-    // работает для обоих вариантов, оставляем его
-    if(slides.length < 10) {
-        totalSlide.textContent = `0${slides.length}`;
-        currentSlide.textContent = `0${slideIndex}`;
+    setCurrentSlide(slideIndex);
 
-    } else {
-        totalSlide.textContent = slides.length;
-        currentSlide.textContent = slideIndex;
-
-    }
     // function showSlides(n) {
 
     //     // проверка граничных значений
@@ -742,11 +785,10 @@ window.addEventListener('DOMContentLoaded', () => {
             slideIndex++;
         }
 
-        if (slides.length < 10) {
-            currentSlide.textContent = `0${slideIndex}`;
-        } else {
-            currentSlide.textContent = slideIndex;
-        }
+        setCurrentSlide(slideIndex);
+
+        dotsProc(dots);
+
     });
 
     prevSlide.addEventListener('click', () => {
@@ -770,14 +812,31 @@ window.addEventListener('DOMContentLoaded', () => {
             slideIndex--;
         }
 
-        if (slides.length < 10) {
-            currentSlide.textContent = `0${slideIndex}`;
-        } else {
-            currentSlide.textContent = slideIndex;
-        }
+        setCurrentSlide(slideIndex);
 
+        dotsProc(dots);
     });
 
+    // функционал для клика по точке
+
+    dots.forEach(dot => {
+        dot.addEventListener('click', (e) => {
+
+            const slideTo = e.target.getAttribute('data-slide-to');
+
+            // индекс на кликнутую точку
+            slideIndex = slideTo;
+
+            // также нужно менять оффсет у слайдов
+            offset = +slideW.slice(0, slideW.length - 2) * (slideTo - 1);
+
+            slidesField.style.transform = `translateX(-${offset}px)`;
+
+            setCurrentSlide(slideIndex);
+
+            dotsProc(dots);
+        });
+    })
 
 
     // const sliderWripper = document.querySelector('.offer__slider-wrapper');
@@ -811,8 +870,5 @@ window.addEventListener('DOMContentLoaded', () => {
     //         console.log(totalSlide);
     //     }));
     // console.log(totalSlide);
-
-
-
 
 });
