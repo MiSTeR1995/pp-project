@@ -764,14 +764,25 @@ window.addEventListener('DOMContentLoaded', () => {
         slide.style.width = slideW;
     });
 
+    // вырываем число из строки с помощью регулярки
+    const deletNotDigits = str => {
+        return +str.replace(/\D/ig, '');
+    };
+
     nextSlide.addEventListener('click', () => {
         // двигаемся вправо, нужно предусмотреть границы
         // но слайды мы перемещаем в начало
         // если это последний слайд
-        if (offset == +slideW.slice(0, slideW.length - 2) * (slides.length - 1)) { // но нужно для начала данные из sladeW вытащить число
+        // if (offset == +slideW.slice(0, slideW.length - 2) * (slides.length - 1)) { // но нужно для начала данные из sladeW вытащить число
+
+        // UPD избавляемся от слайс с помощью регулярки
+        // if (offset == +slideW.replace(/\D/ig, '') * (slides.length - 1)) {
+
+        // используем функцию
+        if (offset == deletNotDigits(slideW) * (slides.length - 1)) {
             offset = 0;
         } else {
-            offset += +slideW.slice(0, slideW.length - 2);
+            offset += deletNotDigits(slideW);
         }
 
         // будем сдвигать изображения с помощью трансформа
@@ -795,10 +806,13 @@ window.addEventListener('DOMContentLoaded', () => {
         // двигаемся назд, нужно предусмотреть границы
         // но слайды мы перемещаем уже в конец
         // если это первый слайд
+
         if (offset == 0) {
-            offset = +slideW.slice(0, slideW.length - 2) * (slides.length - 1);
+            // вырезаем значение пикселей с помощью регулярок
+            // offset = +slideW.replace(/\D/ig, '') * (slides.length - 1); // удаляем буквы из строки
+            offset = deletNotDigits(slideW) * (slides.length - 1); // удаляем буквы из строки
         } else {
-            offset -= +slideW.slice(0, slideW.length - 2);
+            offset -= deletNotDigits(slideW);
         }
 
         // будем сдвигать изображения с помощью трансформа
@@ -828,7 +842,8 @@ window.addEventListener('DOMContentLoaded', () => {
             slideIndex = slideTo;
 
             // также нужно менять оффсет у слайдов
-            offset = +slideW.slice(0, slideW.length - 2) * (slideTo - 1);
+            // offset = +slideW.slice(0, slideW.length - 2) * (slideTo - 1);
+            offset = deletNotDigits(slideW) * (slideTo - 1);
 
             slidesField.style.transform = `translateX(-${offset}px)`;
 
