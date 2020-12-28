@@ -854,36 +854,117 @@ window.addEventListener('DOMContentLoaded', () => {
     })
 
 
-    // const sliderWripper = document.querySelector('.offer__slider-wrapper');
-    // const sliderCounter = document.querySelector('.offer__slider-counter');
 
 
-    // получим слайды из базы данных
-    // const getSlide = async url => {
+    // Калькулятор рассчета каллорий
 
-    //     const result = await axios.get(url);
+    const ccalResult = document.querySelector('.calculating__result span');
+    // также зададим некоторые дефолтные параметры
+    let sex = 'female',
+        height,
+        weight,
+        age,
+        ratio = 1.375; // ratio будем получать из data аттрибутов
 
-    //     return await result;
-    // };
+    // функция по подсчету, причем запускать будем каждый раз, когда пользователь
+    // что-то изменил в калькульяторе, чтобы их пересчитать нормально
+    function calcTotal() {
 
-    // getSlide('http://localhost:3000/slider')
-    //     .then(slides => slides.data.forEach(({ img, alt }, i) => {
-    //         const element = document.createElement('div');
-    //         element.classList.add('offer__slide', 'hide');
+        // для начала нужно проверить заполненность полей
+        if (!sex || !height || !weight || !age || !ratio) {
+            ccalResult.textContent = '____';
+            return;
+        }
 
-    //         if (i === currentSlide) {
-    //             element.classList.remove('hide');
-    //             element.classList.add('show');
-    //         }
+        // если все в порядке, то считаем дальше
+        // но ориентируясь на пол
+        if (sex === 'female') {
+            // формулы взяты из специальной статьи
+            // чтобы не поехала верстка сделаем округление
+            ccalResult.textContent = Math.round(
+                (447.2 + (9.2 * weight) + (3.1 * height) - (4.3 * age)) * ratio
+            );
+        } else {
+            ccalResult.textContent = Math.round(
+                (88.36 + (13.4 * weight) + (4.8 * height) - (5.7 * age)) * ratio
+            );
+        }
+    }
 
-    //         element.innerHTML = `
-    //                 <img src=${img} alt=${alt}>
-    //             `;
+    // сразу же ее вызовем, чтобы показать пользователю, что он еще не ввел данные
+    // впоследствии вызывается в конце каждой функции по вводу новых данных
+    calcTotal();
 
-    //         sliderWripper.append(element);
-    //         totalSlide++;
-    //         console.log(totalSlide);
-    //     }));
-    // console.log(totalSlide);
+    // Для начала получим данные со статического контента
+    // это дивы без value с дата-атрибутами или айди
 
+    function getStaticInfo(parentSelector, activeClass) {
+        // получаем все дивы внутри родителя
+        const elements = document.querySelectorAll(`${parentSelector} div`);
+
+        // также мы будем отслеживать клики по родителю, это делегирование событий (удалено)
+        // UPD: делегирование событие неприменимо здесь, оно ломает верстку.
+        // поэтому нужно на каждый назначать отдельно, чтобы не ломалась верстка
+
+        elements.forEach(elem => {
+            elem.addEventListener('click', e => {
+                // проверяем элемент. есть ли у него аттрибут
+                if (e.target.getAttribute('data-ratio')) {
+                    // вытаскием этот же атрибут ( в верстке мы указали это значение)
+                    ratio = +e.target.getAttribute('data-ratio');
+                }
+                // а это уже относится по клику на пол
+                else {
+                    // вытащим айдишник
+                    sex = e.target.getAttribute('id');
+                }
+
+                // поработаем с классами активности
+                elements.forEach(elem => {
+                    elem.classList.remove(activeClass);
+                });
+
+                e.target.classList.add(activeClass);
+
+                calcTotal();
+            })
+        });
+    }
+    // теперь ее нужно два раза запустить с различными элементами
+    getStaticInfo('#gender', 'calculating__choose-item_active');
+    getStaticInfo('.calculating__choose_big', 'calculating__choose-item_active');
+
+    // функция по обработке инпутов (динамического контента)
+
+    function getDynamicInfo(selector) {
+        // получим тот инпут с которым будем работать
+        const input = document.querySelector(selector);
+
+        // обработчик события на инпут
+        input.addEventListener('input', () => {
+            // проверяем куда пишет пользователь
+            switch(input.getAttribute('id')) {
+                case 'height':
+                    height = +input.value;
+                    break;
+                case 'weight':
+                    weight = +input.value;
+                    break;
+                case 'age':
+                    age = +input.value;
+                    break;
+            }
+            // поместит именно сюда, чтобы после исправления пересчитывалось вновь
+            // иначе не будет работать
+            calcTotal();
+        });
+
+
+    }
+
+    // вызовем эту функцию с тремя разными селекторами, тем самым навесив на них
+    // обработчики событий
+    getDynamicInfo('#height');
+    getDynamicInfo('#weight');
+    getDynamicInfo('#age');
 });
