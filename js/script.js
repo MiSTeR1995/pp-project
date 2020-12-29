@@ -860,11 +860,48 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const ccalResult = document.querySelector('.calculating__result span');
     // также зададим некоторые дефолтные параметры
-    let sex = 'female',
-        height,
-        weight,
-        age,
-        ratio = 1.375; // ratio будем получать из data аттрибутов
+
+    let sex, height, weight, age, ratio; // ratio будем получать из data аттрибутов
+
+    // UPD: Используем локальное хранилище
+    // 1) нужно проверить вообще есть ли что-то в локальном хранилище
+    if (localStorage.getItem('sex')) {
+        sex = localStorage.getItem('sex');
+    } else {
+        sex = 'female';
+        localStorage.setItem('sex', 'female');
+    }
+
+    // тоже самое делаем для ratio
+    if (localStorage.getItem('ratio')) {
+        ratio = localStorage.getItem('ratio');
+    } else {
+        ratio = 1.375;
+        localStorage.setItem('ratio', 1.375);
+    }
+
+
+    function initLocalSettings(selector, activeClass) {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(elem => {
+            elem.classList.remove(activeClass);
+
+            // id от блока с активностью сюда не попадут, так как их тупо
+            // не будет в локальном хранилище и это условие будет всегда
+            // срабатывать на блок с выбором пола
+            if (elem.getAttribute('id') === localStorage.getItem('sex')) {
+                elem.classList.add(activeClass);
+            }
+
+            if (elem.getAttribute('data-ratio') === localStorage.getItem('ratio')) {
+                elem.classList.add(activeClass);
+            }
+        })
+    }
+
+    // проинициализируем данные с локального хранилища
+    initLocalSettings('#gender div', 'calculating__choose-item_active');
+    initLocalSettings('.calculating__choose_big div', 'calculating__choose-item_active');
 
     // функция по подсчету, причем запускать будем каждый раз, когда пользователь
     // что-то изменил в калькульяторе, чтобы их пересчитать нормально
@@ -898,10 +935,12 @@ window.addEventListener('DOMContentLoaded', () => {
     // Для начала получим данные со статического контента
     // это дивы без value с дата-атрибутами или айди
 
-    function getStaticInfo(parentSelector, activeClass) {
+    function getStaticInfo(selector, activeClass) {
         // получаем все дивы внутри родителя
-        const elements = document.querySelectorAll(`${parentSelector} div`);
+        // const elements = document.querySelectorAll(`${parentSelector} div`);
 
+        // UPD: т.к делигированием не пользуемся, то смысла в родителе нет
+        const elements = document.querySelectorAll(selector);
         // также мы будем отслеживать клики по родителю, это делегирование событий (удалено)
         // UPD: делегирование событие неприменимо здесь, оно ломает верстку.
         // поэтому нужно на каждый назначать отдельно, чтобы не ломалась верстка
@@ -912,11 +951,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (e.target.getAttribute('data-ratio')) {
                     // вытаскием этот же атрибут ( в верстке мы указали это значение)
                     ratio = +e.target.getAttribute('data-ratio');
+                    // запоминаем выбор пользователя через локальное хранилище
+                    localStorage.setItem('ratio', +e.target.getAttribute('data-ratio'));
                 }
                 // а это уже относится по клику на пол
                 else {
                     // вытащим айдишник
                     sex = e.target.getAttribute('id');
+                    localStorage.setItem('sex', e.target.getAttribute('id'));
+
                 }
 
                 // поработаем с классами активности
@@ -931,8 +974,9 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     // теперь ее нужно два раза запустить с различными элементами
-    getStaticInfo('#gender', 'calculating__choose-item_active');
-    getStaticInfo('.calculating__choose_big', 'calculating__choose-item_active');
+    // UPD: т.к обращаемся напрямую к селекторам, то тут нужно добавить div
+    getStaticInfo('#gender div', 'calculating__choose-item_active');
+    getStaticInfo('.calculating__choose_big div', 'calculating__choose-item_active');
 
     // функция по обработке инпутов (динамического контента)
 
@@ -942,6 +986,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // обработчик события на инпут
         input.addEventListener('input', () => {
+
+            // если в инпуте что-то кроме чисел, то укажем на это
+            // делаем с помощью регулярок
+            if (input.value.match(/\D/g)) {
+                // подсветим инпут красным цветом
+                input.style.border = '1px solid red';
+            } else {
+                // если все ок, то уберем подсветку
+                input.style.border = 'none';
+            }
+
             // проверяем куда пишет пользователь
             switch(input.getAttribute('id')) {
                 case 'height':
