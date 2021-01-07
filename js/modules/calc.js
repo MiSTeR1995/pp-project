@@ -167,4 +167,8 @@ function calc() {
     getDynamicInfo('#age');
 }
 
-module.exports = calc;
+// commonJS синтаксис
+// module.exports = calc;
+
+// экспортируем по стандарту ES6
+export default calc;

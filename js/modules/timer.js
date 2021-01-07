@@ -1,7 +1,6 @@
-function timer() {
-    // Создание таймера акций и тд
+function timer(id, deadline) {
 
-    const deadline = '2020-12-12';
+    // Создание таймера акций и тд
 
     // функция определения разницы между дедлайном и текущим временем
     function getTimeRemaining(endTime) {
@@ -85,7 +84,10 @@ function timer() {
         }
     }
 
-    setClock('.timer', deadline);
+    setClock(id, deadline);
 }
 
-module.exports = timer;
+// module.exports = timer;
+
+// экспортируем по стандарту ES6
+export default timer;

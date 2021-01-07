@@ -41,15 +41,5 @@
     }
   ],
   "requests": [
-    {
-      "name": "Дмитрий",
-      "phone": "54445445",
-      "id": 1
-    },
-    {
-      "name": "dsgsg",
-      "phone": "sdsg",
-      "id": 2
-    }
   ]
 }

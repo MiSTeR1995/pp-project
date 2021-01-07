@@ -1,6 +1,11 @@
-function forms() {
+// так как этот модуль использует функции из другого модуля, импортируем сюда их
+
+import {closeModal, openModal} from './modal';
+import {postData} from '../services/services';
+
+function forms(formSelector, modalTimerId) {
     // Отправка форм
-    const forms = document.querySelectorAll('form');
+    const forms = document.querySelectorAll(formSelector);
 
     const message = {
         loading: 'img/form/spinner.svg',
@@ -13,38 +18,6 @@ function forms() {
         bindPostData(item);
     });
 
-    // сделаем взаимодействие с сервером отдельной функцией
-    // функция занимается тем, что настраивает запрос.
-    // она фетчит(посылает запрос на сервер), получает какой-то ответ от сервера
-    // после этого трансформирует этот ответ в json
-    // внутри этой функции асинхронный код и это нужно учесть
-    // т.к. код пойдет выполняться дальше, не ожидая ответа от сервера (где фетч)
-    // из-за этого функция может вернуть ошибку, а не нужный нам результат
-    // для этого нужно указать, что функция имеет асинхронный код.
-    // async поможет это сделать (ES8)
-    // после этого уже можно использовать его парный оператор await (всегда вместе)
-    // он ставится перед теми операцими, которые нам необходимо дождаться
-    const postData = async (url, data) => {
-        // внутри переменной лежит промис, который возвращает фетч
-        // нам нужно дождаться выполнение фетча, поэтому ставим await
-        // неважно какой результат, но выполнения мы должны дождаться
-        // код не совсем синхронный, он не блокирует выполение кода дальше
-        // но именно для этого будет ждать до 30 сек(по стандарту) ответа
-        const result = await fetch(url, {
-            method: 'POST',
-            // для json нужно использовать заголовки
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: data
-        });
-
-        // вернем результат в формате json
-        // здесь тоже понадобится await, т.к. возващается промис
-        // эта операция возникает и проводится не сразу, мы не знаем
-        // какой там большой объект json и сколько нужно времени на обработку
-        return await result.json();
-    };
 
     function bindPostData(form) {
 
@@ -197,7 +170,7 @@ function forms() {
         const prevModalDialog = document.querySelector('.modal__dialog');
 
         prevModalDialog.classList.add('hide');
-        openModal();
+        openModal('.modal', modalTimerId);
 
         const thanksModal = document.createElement('div');
         thanksModal.classList.add('modal__dialog');
@@ -217,9 +190,13 @@ function forms() {
             thanksModal.remove();
             prevModalDialog.classList.add('show');
             prevModalDialog.classList.remove('hide');
-            closeModal();
+            closeModal('.modal');
         }, 4000);
     }
 }
 
-module.exports = forms;
+// module.exports = forms;
+
+
+// экспортируем по стандарту ES6
+export default forms;

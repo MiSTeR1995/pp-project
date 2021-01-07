@@ -1,19 +1,22 @@
-function slider() {
+// здесь настроим аргументы, которые не зависят от их порядка задания
+// когда их много это особенно актуально
+// испольуется деструктуризация объектов
+function slider({container, slide, nextArrow, prevArrow, totalCounter, currenCounter, wrapper, field}) {
     // Создание слайдера
 
-    const slides = document.querySelectorAll('.offer__slide');
-    const prevSlide = document.querySelector('.offer__slider-prev');
-    const nextSlide = document.querySelector('.offer__slider-next');
-    const totalSlide = document.querySelector('#total');
-    const currentSlide = document.querySelector('#current');
+    const slides = document.querySelectorAll(slide);
+    const prevSlide = document.querySelector(prevArrow);
+    const nextSlide = document.querySelector(nextArrow);
+    const totalSlide = document.querySelector(totalCounter);
+    const currentSlide = document.querySelector(currenCounter);
 
     // переменные для карусели
-    const slidesWrapper = document.querySelector('.offer__slider-wrapper');
-    const slidesField = document.querySelector('.offer__slider-inner');
+    const slidesWrapper = document.querySelector(wrapper);
+    const slidesField = document.querySelector(field);
     const slideW = window.getComputedStyle(slidesWrapper).width; // ширина отрендеренного блока
 
     // навигация по слайдам
-    const slider = document.querySelector('.offer__slider');
+    const slider = document.querySelector(container);
     const dots = []; // истинный массив для точек, чтобы работать потом с ними
 
     let offset = 0; // отступ для слайдеров
@@ -232,4 +235,7 @@ function slider() {
     });
 }
 
-module.exports = slider;
+// module.exports = slider;
+
+// экспортируем по стандарту ES6
+export default slider;
